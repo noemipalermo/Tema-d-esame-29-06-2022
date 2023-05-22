@@ -5,8 +5,10 @@
 package it.polito.tdp.itunes;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import it.polito.tdp.itunes.model.Album;
+import it.polito.tdp.itunes.model.BilancioAlbum;
 import it.polito.tdp.itunes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -35,10 +37,10 @@ public class FXMLController {
     private Button btnPercorso; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA2"
-    private ComboBox<?> cmbA2; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA2; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtN"
     private TextField txtN; // Value injected by FXMLLoader
@@ -52,15 +54,93 @@ public class FXMLController {
     @FXML
     void doCalcolaAdiacenze(ActionEvent event) {
     	
+    	Album a1 = cmbA1.getValue();
+    	
+    	if(a1==null) {
+    		this.txtResult.setText("Seleziona un Album dalla comboBox");
+    		return;
+    	}
+    	
+    	List<BilancioAlbum> bilanci = this.model.getAdiacenti(a1);
+    	
+    	this.txtResult.setText("Successori del nodo "+a1+"\n");
+    	
+    	for(BilancioAlbum b : bilanci)
+    		this.txtResult.appendText(b+"\n");
+    	
+    	
+    	
     }
 
     @FXML
     void doCalcolaPercorso(ActionEvent event) {
     	
+    	if (!(model.getNumVertices()>0)) {
+    		txtResult.setText("Graph not created.");
+    		return;
+    	}
+    	
+    	String input = this.txtX.getText();
+    	
+    	if(input == "") {
+    		this.txtResult.setText("Inserire un numero");
+    		return;
+    	}
+    	
+    	try {
+    		int inputNum = Integer.parseInt(input);
+    		
+    		Album source = cmbA1.getValue();
+    		Album target = this.cmbA2.getValue();
+    		
+    		List<Album> path = this.model.getPath(source, target, inputNum);
+    		if(source==null  || target ==null) {
+        		this.txtResult.setText("Seleziona Album dalle comboBox");
+        		return;
+        	}
+    		
+    		if(path.isEmpty()) {
+    			this.txtResult.appendText("Non esiste un percorso tra "+source+" e "+target+"\n");
+    			return;
+    		}
+    		
+    		this.txtResult.setText("Percorso tra "+source+" e "+target+"\n");
+    		
+    		for(Album a: path) {
+    			this.txtResult.appendText(a+"\n");
+    		}
+    		
+    	}catch(NumberFormatException e){
+    		this.txtResult.setText("Inserire un numero valido");
+    	}
+    	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+   
+    	String input = this.txtN.getText();
+    	
+    	if(input == "") {
+    		this.txtResult.setText("Inserire un numero");
+    		return;
+    	}
+    	
+    	try {
+    		int inputNum = Integer.parseInt(input);
+    		model.buldGraph(inputNum);
+    		int numV = model.getNumVertices();
+    		int numE = model.getNumEdges();
+    		
+    		this.cmbA1.getItems().addAll(model.getVertices());
+    		this.cmbA2.getItems().addAll(model.getVertices());
+    		
+    		this.txtResult.setText("Grafo crato correttamente \n");
+    		this.txtResult.appendText("Numero di verici: "+numV+"\nNumero di archi: "+numE);
+    		
+    	}catch(NumberFormatException e){
+    		this.txtResult.setText("Inserire un numero valido");
+    	}
     	
     }
 
